@@ -3,24 +3,21 @@
  *  ESP32
  *
  *  By Brian Lough
- *  https://www.youtube.com/channel/UCezJOfu7OtqGzd5xrP3q6WA
+ *  Modified By Charlie Steenhagen
+ *  Updated to work with ArduinoJSON 6.14.0
  *******************************************************************/
 
-#include <YoutubeApi.h>
+#include "YoutubeApi.h"
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
-
+#include "credentials.h"
 #include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
-
-//------- Replace the following! ------
-char ssid[] = "ssid";       // your network SSID (name)
-char password[] = "password";  // your network key
 
 
 WiFiClientSecure client;
 YoutubeApi api(API_KEY, client);
 
-unsigned long api_mtbs = 60000; //mean time between api requests
+unsigned long api_mtbs = 10000; //mean time between api requests
 unsigned long api_lasttime;   //last time api request has been done
 
 long subs = 0;
@@ -48,12 +45,12 @@ void setup() {
   IPAddress ip = WiFi.localIP();
   Serial.println(ip);
 
-
 }
 
 void loop() {
 
   if (millis() - api_lasttime > api_mtbs)  {
+    Serial.println("Checking...");
     if(api.getChannelStatistics(CHANNEL_ID))
     {
       Serial.println("---------Stats---------");
@@ -73,4 +70,5 @@ void loop() {
     }
     api_lasttime = millis();
   }
+  //TODO update the display
 }
