@@ -26,7 +26,7 @@ YoutubeApi api(API_KEY, client);
 // Define the array of leds
 CRGB leds[NUM_DIGITS * LEDS_PER_DIGIT];
 
-unsigned long api_mtbs = 10000; //mean time between api requests
+unsigned long api_mtbs = 60000; //mean time between api requests -- One Minute
 unsigned long api_lasttime;   //last time api request has been done
 
 int testcounter = 0;
