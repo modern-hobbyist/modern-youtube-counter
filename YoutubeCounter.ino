@@ -12,8 +12,7 @@
 #include <WiFiClientSecure.h>
 #include <FastLED.h>
 #include "credentials.h"
-#include "YoutubeCounter.h"
-#include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
+/#include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
 
 #define NUM_DIGITS 6
 #define LEDS_PER_DIGIT 7
@@ -45,7 +44,10 @@ bool digits[][LEDS_PER_DIGIT] = {
 };
 
 void setup() {
-
+  //LED control to light up the ElectronicsEnclosure
+//  pinMode(27, OUTPUT);
+//  digitalWrite(27, HIGH);
+  
   Serial.begin(115200);
   LEDS.addLeds<WS2812,DATA_PIN,RGB>(leds,NUM_DIGITS*LEDS_PER_DIGIT);
   LEDS.setBrightness(255);
