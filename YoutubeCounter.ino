@@ -12,11 +12,12 @@
 #include <WiFiClientSecure.h>
 #include <FastLED.h>
 #include "credentials.h"
-/#include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
+#include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
 
 #define NUM_DIGITS 6
 #define LEDS_PER_DIGIT 7
 #define DATA_PIN 26
+#define ELECTRONICS_LED_PIN 27
 #define CLOCK_PIN 13
 
 WiFiClientSecure client;
@@ -24,6 +25,7 @@ YoutubeApi api(API_KEY, client);
 
 // Define the array of leds
 CRGB leds[NUM_DIGITS * LEDS_PER_DIGIT];
+CRGB led[1];
 
 unsigned long api_mtbs = 60000; //mean time between api requests -- One Minute
 unsigned long api_lasttime;   //last time api request has been done
@@ -44,13 +46,16 @@ bool digits[][LEDS_PER_DIGIT] = {
 };
 
 void setup() {
-  //LED control to light up the ElectronicsEnclosure
-//  pinMode(27, OUTPUT);
-//  digitalWrite(27, HIGH);
   
   Serial.begin(115200);
-  LEDS.addLeds<WS2812,DATA_PIN,RGB>(leds,NUM_DIGITS*LEDS_PER_DIGIT);
+  LEDS.addLeds<WS2811,DATA_PIN,RGB>(leds,NUM_DIGITS*LEDS_PER_DIGIT);
   LEDS.setBrightness(255);
+
+  LEDS.addLeds<WS2811, ELECTRONICS_LED_PIN,RGB>(led, 1);
+  LEDS.setBrightness(255);
+  led[0] = CRGB(255, 255,255);
+  LEDS.show();
+  
   // Attempt to connect to Wifi network:
   Serial.print("Connecting Wifi: ");
   Serial.println(ssid);
