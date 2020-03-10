@@ -1,6 +1,7 @@
-![YouTube Play Counter](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_3743.png)
-![YouTube Play Counter](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_5599.png)
-![YouTube Play Counter](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_8685.png)
+<img src="https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_3743.png" width="48">
+<img src="https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_5599.png" width="48">
+<img src="https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_8685.png" width="48">
+
 # Modern YouTube Counter
 There is nothing quite as exciting as having a new viewer subscribe to your YouTube channel. For content creators trying to get
 monetized, every new subscriber gets you one step closer to the 1000 subs needed to reach your goal. I wanted a way to view a live
@@ -39,7 +40,9 @@ Once that is updated, go ahead and upload it to the ESP32 and plug it in. With t
 
 That's it! Once you wire everything up and assemble it, you should have a working YouTube subscription counter too!
 
-
+![YouTube Play Counter](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_3743.png)
+![YouTube Play Counter](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_5599.png)
+![YouTube Play Counter](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_8685.png)
 
 
 
