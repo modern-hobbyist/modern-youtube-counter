@@ -1,6 +1,4 @@
-<img src="https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_3743.png" width="48">
-<img src="https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_5599.png" width="48">
-<img src="https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_8685.png" width="48">
+<img src="https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_3743.png" width="250">
 
 # Modern YouTube Counter
 There is nothing quite as exciting as having a new viewer subscribe to your YouTube channel. For content creators trying to get
