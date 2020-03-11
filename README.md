@@ -24,6 +24,7 @@ The sections of LEDs are wired together in the configuration shown in the image 
 
 ![Wiring for LEDs](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_9061.png)
 ![Schematic](https://github.com/csteamengine/YouTubeCounter/blob/master/Images/Schematic_YouTubeCounter_Sheet_1_20200311172836.png)
+![Electronics](https://github.com/csteamengine/YouTubeCounter/blob/master/Images/IMG_3974.png)
 
 The last thing to note on the electronics, is that I added some stand off female pins so that I could replace the ESP32 or remove
 it in the event that either something went wrong, or if I wanted to change the code on it easily. 
