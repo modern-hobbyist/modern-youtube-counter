@@ -23,6 +23,7 @@ The brains of this project are powered by an ESP32 Module that connects to the Y
 The sections of LEDs are wired together in the configuration shown in the image below. This way I could connect multiple digits together in series, without needing a controller for each digit. The LEDs run off 12v while the ESP32 can run off pretty much anything under 12v. It can handle 12v, but as that's the upper limit of its voltage regulator, I wanted to be sure I didn't burn it out, which has happened to me before. To do this, I added a 5v regulator I pulled out of a car USB charger and wired that to the vin on the ESP32. I designed a small YouTube logo box to store all the electronics for this project, and I added another section of LEDs to the box, so I could light up the play button, just to spice things up a bit. The last part I added, was a 12v plug so I could power everything from a common plug type. The output of that is sent to the LEDs, the onboard LED, and the 5v Voltage Regulator, which then powers the ESP32. 
 
 ![Wiring for LEDs](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/Parts.png)
+![Schematic](https://github.com/csteamengine/YouTubeCounter/blob/master/Images/Schematic_YouTubeCounter_Sheet_1_20200311172836.png)
 
 The last thing to note on the electronics, is that I added some stand off female pins so that I could replace the ESP32 or remove
 it in the event that either something went wrong, or if I wanted to change the code on it easily. 
