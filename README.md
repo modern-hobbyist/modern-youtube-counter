@@ -16,6 +16,9 @@ I designed and 3d printed an enclosure made up of a black section to hold all th
 as a diffusor. The last part of the display, is a small detail piece to help separate each of the segments and improve the
 appearance a bit.
 
+## 3d Printed Parts
+All 3d printed parts for this project can be downloaded here: https://www.thingiverse.com/thing:4216665
+
 ![3d Printed Parts](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/Parts.png)
 
 The brains of this project are powered by an ESP32 Module that connects to the YouTube API to pull channel statistics and decides which LEDs to turn on and which to turn off. For the lights, I used a strip of WS2811 LEDs, which can be cut into sections of 3 pixels. This ended up being perfect for the size I wanted the display to be. 
