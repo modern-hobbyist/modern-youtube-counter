@@ -11,6 +11,8 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <FastLED.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 #include "fauxmoESP.h"
 #include "credentials.h"
 #include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
@@ -20,7 +22,13 @@
 #define DATA_PIN 26
 #define ELECTRONICS_LED_PIN 27
 #define CLOCK_PIN 13
-#define SUBSCRIPTION_COUNTER "Subscription Counter"
+#define DIGITS_NAME "Subscription Counter"
+#define SUBSRIPTION_MODE
+//#define CLOCK_MODE
+#define TWELVE_HOUR_TIME
+
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
 
 WiFiClientSecure client;
 YoutubeApi api(API_KEY, client);
@@ -51,6 +59,12 @@ bool digits[][LEDS_PER_DIGIT] = {
 
 fauxmoESP fauxmo;
 
+#ifdef CLOCK_MODE
+  int timeStampHours = 0;
+  int timeStampMinutes = 0;
+  int timeStamp = 0;
+#endif
+
 void setup() {
   
   Serial.begin(115200);
@@ -65,6 +79,7 @@ void setup() {
   // Attempt to connect to Wifi network:
   Serial.print("Connecting Wifi: ");
   Serial.println(ssid);
+  
 
   /* Explicitly set the ESP32 to be a WiFi-client, otherwise, it by default,
      would try to act as both a client and an access-point and could cause
@@ -75,6 +90,19 @@ void setup() {
     Serial.print(".");
     delay(500);
   }
+
+  #ifdef CLOCK_MODE
+    // Initialize a NTPClient to get time
+    timeClient.begin();
+  
+    //Check your UTC time offset at this link
+    //https://en.wikipedia.org/wiki/List_of_UTC_time_offsets
+    // Set offset time in seconds to adjust for your timezone
+    //3600 seconds per hour offset
+    //1 hour offset example
+    timeClient.setTimeOffset(-3600*4);
+  #endif
+  
   fauxmo.createServer(true); // not needed, this is the default value
   fauxmo.setPort(80); // This is required for gen3 devices
 
@@ -89,7 +117,7 @@ void setup() {
   // "Alexa, set yellow lamp to fifty" (50 means 50% of brightness, note, this example does not use this functionality)
 
   // Add virtual devices
-  fauxmo.addDevice(SUBSCRIPTION_COUNTER);
+  fauxmo.addDevice(DIGITS_NAME);
 
   fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state, unsigned char value) {
       
@@ -101,7 +129,7 @@ void setup() {
       
       Serial.printf("[MAIN] Device #%d (%s) state: %s value: %d\n", device_id, device_name, state ? "ON" : "OFF", value);
 
-      if (strcmp(device_name, SUBSCRIPTION_COUNTER)==0) {
+      if (strcmp(device_name, DIGITS_NAME)==0) {
         power = state;
         brightness = value;
         alexa_update = true;
@@ -119,37 +147,59 @@ void setup() {
 
 void loop() {
   fauxmo.handle();
-  if(power){
-    led[0] = CRGB(255, 255,255);
-    if (millis() - api_lasttime > api_mtbs || alexa_update)  {
-      Serial.println("Checking...");
-      if(api.getChannelStatistics(CHANNEL_ID))
-      {
-        Serial.println("---------Stats---------");
-        Serial.print("Subscriber Count: ");
-        Serial.println(api.channelStats.subscriberCount);
-        Serial.print("View Count: ");
-        Serial.println(api.channelStats.viewCount);
-        Serial.print("Comment Count: ");
-        Serial.println(api.channelStats.commentCount);
-        Serial.print("Video Count: ");
-        Serial.println(api.channelStats.videoCount);
-        // Probably not needed :)
-        //Serial.print("hiddenSubscriberCount: ");
-        //Serial.println(api.channelStats.hiddenSubscriberCount);
-        Serial.println("------------------------");
-        updateDigits(api.channelStats.subscriberCount);
-        led[0] = CRGB(255, 255,255);
-      }else if(alexa_update){
-        updateDigits(0);
-        led[0] = CRGB(255, 255,255);
-      }
-      api_lasttime = millis();
-      alexa_update = false;
+  #ifdef CLOCK_MODE
+    if(power){
+      timeClient.update();
+      timeStampHours = timeClient.getHours();
+      timeStampMinutes = timeClient.getMinutes();
+      timeStamp = timeStampHours * 100 + timeStampMinutes;
+  
+      #ifdef TWELVE_HOUR_TIME
+        if(timeStamp >= 1200){
+          timeStamp -= 1200;
+        }
+      #endif
+      
+      updateDigits(timeStamp);
+      delay(60000);
+    }else{
+      turnOffDigits();
     }
-  }else{
-    turnOffDigits();
-  }
+  #endif
+  
+  #ifdef SUBSCRIPTION_MODE
+    if(power){
+      led[0] = CRGB(255, 255,255);
+      if (millis() - api_lasttime > api_mtbs || alexa_update)  {
+        Serial.println("Checking...");
+        if(api.getChannelStatistics(CHANNEL_ID))
+        {
+          Serial.println("---------Stats---------");
+          Serial.print("Subscriber Count: ");
+          Serial.println(api.channelStats.subscriberCount);
+          Serial.print("View Count: ");
+          Serial.println(api.channelStats.viewCount);
+          Serial.print("Comment Count: ");
+          Serial.println(api.channelStats.commentCount);
+          Serial.print("Video Count: ");
+          Serial.println(api.channelStats.videoCount);
+          // Probably not needed :)
+          //Serial.print("hiddenSubscriberCount: ");
+          //Serial.println(api.channelStats.hiddenSubscriberCount);
+          Serial.println("------------------------");
+          updateDigits(api.channelStats.subscriberCount);
+          led[0] = CRGB(255, 255,255);
+        }else if(alexa_update){
+          updateDigits(0);
+          led[0] = CRGB(255, 255,255);
+        }
+        api_lasttime = millis();
+        alexa_update = false;
+      }
+    }else{
+      turnOffDigits();
+    }
+  #endif
   
 }
 
