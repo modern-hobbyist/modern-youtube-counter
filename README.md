@@ -8,7 +8,7 @@ subscribes. I have been so happy with the final result that I wanted to document
 
 If you are interested in building this, check out my YouTube channel for for the video, and as always, be sure to subscribe!
 
-Video Link: ...
+Video Link: https://youtu.be/5DM0E9tf7Ko
 
 # Build
 To do this, I built a giant seven segment display made out of sections of WS2811 LEDs with an ESP32 for the brains.
