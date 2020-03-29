@@ -23,9 +23,10 @@
 #define ELECTRONICS_LED_PIN 27
 #define CLOCK_PIN 13
 #define DIGITS_NAME "Subscription Counter"
-#define SUBSRIPTION_MODE
+#define SUBSCRIPTION_MODE
 //#define CLOCK_MODE
 #define TWELVE_HOUR_TIME
+//#define DEBUG
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
@@ -37,7 +38,7 @@ YoutubeApi api(API_KEY, client);
 CRGB leds[NUM_DIGITS * LEDS_PER_DIGIT];
 CRGB led[1];
 
-unsigned long api_mtbs = 60000; //mean time between api requests -- One Minute
+unsigned long api_mtbs = 10000; //mean time between api requests -- One Minute
 unsigned long api_lasttime;   //last time api request has been done
 bool power = true;
 bool alexa_update = false;
@@ -75,11 +76,12 @@ void setup() {
   LEDS.setBrightness(255);
   led[0] = CRGB(255, 255,255);
   LEDS.show();
-  
-  // Attempt to connect to Wifi network:
-  Serial.print("Connecting Wifi: ");
-  Serial.println(ssid);
-  
+
+  #ifdef DEBUG
+    // Attempt to connect to Wifi network:
+    Serial.print("Connecting Wifi: ");
+    Serial.println(ssid);
+  #endif
 
   /* Explicitly set the ESP32 to be a WiFi-client, otherwise, it by default,
      would try to act as both a client and an access-point and could cause
@@ -87,7 +89,9 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
+    #ifdef DEBUG
+      Serial.print(".");
+    #endif
     delay(500);
   }
 
@@ -126,42 +130,40 @@ void setup() {
       // State is a boolean (ON/OFF) and value a number from 0 to 255 (if you say "set kitchen light to 50%" you will receive a 128 here).
       // Just remember not to delay too much here, this is a callback, exit as soon as possible.
       // If you have to do something more involved here set a flag and process it in your main loop.
-      
-      Serial.printf("[MAIN] Device #%d (%s) state: %s value: %d\n", device_id, device_name, state ? "ON" : "OFF", value);
-
+      #ifdef DEBUG
+        Serial.printf("[MAIN] Device #%d (%s) state: %s value: %d\n", device_id, device_name, state ? "ON" : "OFF", value);
+      #endif
       if (strcmp(device_name, DIGITS_NAME)==0) {
         power = state;
         brightness = value;
         alexa_update = true;
-        
       }
   });
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
+  
   IPAddress ip = WiFi.localIP();
-  Serial.println(ip);
-  api.getChannelStatistics(CHANNEL_ID);
-  updateDigits(api.channelStats.subscriberCount);
+
+  #ifdef DEBUG
+    Serial.println("");
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(ip);
+  #endif
+
+  #ifdef SUBSCRIPTION_COUNTER
+    api.getChannelStatistics(CHANNEL_ID);
+    updateDigits(api.channelStats.subscriberCount);
+  #endif
+
+  #ifdef CLOCK_MODE
+    updateTime();
+  #endif
 }
 
 void loop() {
   fauxmo.handle();
   #ifdef CLOCK_MODE
     if(power){
-      timeClient.update();
-      timeStampHours = timeClient.getHours();
-      timeStampMinutes = timeClient.getMinutes();
-      timeStamp = timeStampHours * 100 + timeStampMinutes;
-  
-      #ifdef TWELVE_HOUR_TIME
-        if(timeStamp >= 1200){
-          timeStamp -= 1200;
-        }
-      #endif
-      
-      updateDigits(timeStamp);
-      delay(60000);
+      updateTime();
     }else{
       turnOffDigits();
     }
@@ -171,22 +173,26 @@ void loop() {
     if(power){
       led[0] = CRGB(255, 255,255);
       if (millis() - api_lasttime > api_mtbs || alexa_update)  {
-        Serial.println("Checking...");
+        #ifdef DEBUG
+          Serial.println("Checking...");
+        #endif
         if(api.getChannelStatistics(CHANNEL_ID))
         {
-          Serial.println("---------Stats---------");
-          Serial.print("Subscriber Count: ");
-          Serial.println(api.channelStats.subscriberCount);
-          Serial.print("View Count: ");
-          Serial.println(api.channelStats.viewCount);
-          Serial.print("Comment Count: ");
-          Serial.println(api.channelStats.commentCount);
-          Serial.print("Video Count: ");
-          Serial.println(api.channelStats.videoCount);
-          // Probably not needed :)
-          //Serial.print("hiddenSubscriberCount: ");
-          //Serial.println(api.channelStats.hiddenSubscriberCount);
-          Serial.println("------------------------");
+          #ifdef DEBUG
+            Serial.println("---------Stats---------");
+            Serial.print("Subscriber Count: ");
+            Serial.println(api.channelStats.subscriberCount);
+            Serial.print("View Count: ");
+            Serial.println(api.channelStats.viewCount);
+            Serial.print("Comment Count: ");
+            Serial.println(api.channelStats.commentCount);
+            Serial.print("Video Count: ");
+            Serial.println(api.channelStats.videoCount);
+            // Probably not needed :)
+            //Serial.print("hiddenSubscriberCount: ");
+            //Serial.println(api.channelStats.hiddenSubscriberCount);
+            Serial.println("------------------------");
+          #endif
           updateDigits(api.channelStats.subscriberCount);
           led[0] = CRGB(255, 255,255);
         }else if(alexa_update){
@@ -200,8 +206,38 @@ void loop() {
       turnOffDigits();
     }
   #endif
-  
 }
+
+#ifdef CLOCK_MODE
+  /*
+   * Updates the NTPClient every loop, but by default the NTPClient only pings the server once a minute
+   */
+  void updateTime(){
+    #ifdef DEBUG
+      Serial.println("Updating Time...");
+    #endif
+    if(timeClient.update()){
+      timeStampHours = timeClient.getHours();
+      timeStampMinutes = timeClient.getMinutes();
+      timeStamp = timeStampHours * 100 + timeStampMinutes;
+    
+      #ifdef TWELVE_HOUR_TIME
+        if(timeStamp >= 1200){
+          timeStamp -= 1200;
+        }
+      #endif
+    }else{
+      timeStamp = 0;
+    }
+    
+    #ifdef DEBUG
+      Serial.print("Time: ");
+      Serial.println(timeStamp);
+    #endif
+    
+    updateDigits(timeStamp);
+  }
+#endif
 
 /*
  * The display will be made up of 7 sections of WS2811 leds which come in sections of 3. 
