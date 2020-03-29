@@ -8,13 +8,16 @@ subscribes. I have been so happy with the final result that I wanted to document
 
 If you are interested in building this, check out my YouTube channel for for the video, and as always, be sure to subscribe!
 
-Video Link: ...
+Video Link: https://youtu.be/5DM0E9tf7Ko
 
 # Build
 To do this, I built a giant seven segment display made out of sections of WS2811 LEDs with an ESP32 for the brains.
 I designed and 3d printed an enclosure made up of a black section to hold all the LEDs as well as a white panel to act 
 as a diffusor. The last part of the display, is a small detail piece to help separate each of the segments and improve the
 appearance a bit.
+
+## 3d Printed Parts
+All 3d printed parts for this project can be downloaded here: https://www.thingiverse.com/thing:4216665
 
 ![3d Printed Parts](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/Parts.png)
 
@@ -24,6 +27,7 @@ The sections of LEDs are wired together in the configuration shown in the image 
 
 ![Wiring for LEDs](https://github.com/csteamengine/YoutubeCounter/blob/master/Images/IMG_9061.png)
 ![Schematic](https://github.com/csteamengine/YouTubeCounter/blob/master/Images/Schematic_YouTubeCounter_Sheet_1_20200311172836.png)
+![Electronics](https://github.com/csteamengine/YouTubeCounter/blob/master/Images/IMG_3974.png)
 
 The last thing to note on the electronics, is that I added some stand off female pins so that I could replace the ESP32 or remove
 it in the event that either something went wrong, or if I wanted to change the code on it easily. 
