@@ -55,7 +55,7 @@ bool digits[][LEDS_PER_DIGIT] = {
   {false, true, true, true, true, true, true},
   {true, true, false, false, true, false, false},
   {true, true, true, true, true, true, true},
-  {true, true, true, true, true, false, false}
+  {true, true, true, true, true, true, false}
 };
 
 fauxmoESP fauxmo;
