@@ -17,7 +17,7 @@
 #include "credentials.h"
 #include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
 
-#define NUM_DIGITS 6
+#define NUM_DIGITS 4
 #define LEDS_PER_DIGIT 7
 #define DATA_PIN 26
 #define ELECTRONICS_LED_PIN 27
@@ -25,7 +25,7 @@
 #define DIGITS_NAME "Subscription Counter"
 #define SUBSCRIPTION_MODE
 //#define CLOCK_MODE
-#define TWELVE_HOUR_TIME
+//#define TWELVE_HOUR_TIME
 //#define DEBUG
 
 WiFiUDP ntpUDP;
@@ -38,7 +38,7 @@ YoutubeApi api(API_KEY, client);
 CRGB leds[NUM_DIGITS * LEDS_PER_DIGIT];
 CRGB led[1];
 
-unsigned long api_mtbs = 10000; //mean time between api requests -- One Minute
+unsigned long api_mtbs = 60000; //mean time between api requests -- One Minute
 unsigned long api_lasttime;   //last time api request has been done
 bool power = true;
 bool alexa_update = false;
@@ -149,9 +149,11 @@ void setup() {
     Serial.println(ip);
   #endif
 
-  #ifdef SUBSCRIPTION_COUNTER
+  #ifdef SUBSCRIPTION_MODE
     api.getChannelStatistics(CHANNEL_ID);
     updateDigits(api.channelStats.subscriberCount);
+                Serial.print("Subscriber Count: ");
+            Serial.println(api.channelStats.subscriberCount);
   #endif
 
   #ifdef CLOCK_MODE

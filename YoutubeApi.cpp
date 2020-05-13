@@ -52,7 +52,7 @@ String YoutubeApi::sendGetToYoutube(String command) {
 				// Allow body to be parsed before finishing
 				avail = finishedHeaders;
 				char c = client->read();
-				//Serial.write(c);
+//				Serial.write(c);
 
 				if(!finishedHeaders){
 					if (currentLineIsBlank && c == '\n') {
@@ -86,20 +86,29 @@ String YoutubeApi::sendGetToYoutube(String command) {
 		}
 	}
 	closeClient();
+  body.remove(0, body.indexOf('{'));
 	return body;
 }
 
 bool YoutubeApi::getChannelStatistics(String channelId){
   String command="/youtube/v3/channels?part=statistics&id="+channelId; //If you can't find it(for example if you have a custom url) look here: https://www.youtube.com/account_advanced
-  const size_t capacity = 4096;
+  const size_t capacity = 10000;
   DynamicJsonDocument doc(capacity);
+
+  Serial.println("response: ");
 	
 	if(_debug) { Serial.println(F("Closing client")); }
 	
 	String response = sendGetToYoutube(command);       //recieve reply from youtube
 
+//  Serial.print("response size: ");
+  Serial.println(response);
+//  Serial.print("capacity: ");
+//  Serial.println(capacity);
+ 
   DeserializationError error = deserializeJson(doc, response);
   if (error) {
+    Serial.println(response);
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.c_str());
     return false;
