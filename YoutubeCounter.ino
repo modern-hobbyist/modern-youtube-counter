@@ -13,7 +13,7 @@
 #include <FastLED.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-#include "fauxmoESP.h"
+#include <Espalexa.h>
 #include "credentials.h"
 #include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
 
@@ -26,10 +26,12 @@
 #define SUBSCRIPTION_MODE
 //#define CLOCK_MODE
 //#define TWELVE_HOUR_TIME
-//#define DEBUG
+#define DEBUG
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
+
+Espalexa espalexa;
 
 WiFiClientSecure client;
 YoutubeApi api(API_KEY, client);
@@ -58,7 +60,7 @@ bool digits[][LEDS_PER_DIGIT] = {
   {true, true, true, true, true, true, false}
 };
 
-fauxmoESP fauxmo;
+void subscriptionCounterChanged(uint8_t brightness);
 
 #ifdef CLOCK_MODE
   int timeStampHours = 0;
@@ -106,39 +108,8 @@ void setup() {
     //1 hour offset example
     timeClient.setTimeOffset(-3600*4);
   #endif
-  
-  fauxmo.createServer(true); // not needed, this is the default value
-  fauxmo.setPort(80); // This is required for gen3 devices
-
-  // You have to call enable(true) once you have a WiFi connection
-  // You can enable or disable the library at any moment
-  // Disabling it will prevent the devices from being discovered and switched
-  fauxmo.enable(true);
-
-  // You can use different ways to invoke alexa to modify the devices state:
-  // "Alexa, turn yellow lamp on"
-  // "Alexa, turn on yellow lamp
-  // "Alexa, set yellow lamp to fifty" (50 means 50% of brightness, note, this example does not use this functionality)
-
-  // Add virtual devices
-  fauxmo.addDevice(DIGITS_NAME);
-
-  fauxmo.onSetState([](unsigned char device_id, const char * device_name, bool state, unsigned char value) {
-      
-      // Callback when a command from Alexa is received. 
-      // You can use device_id or device_name to choose the element to perform an action onto (relay, LED,...)
-      // State is a boolean (ON/OFF) and value a number from 0 to 255 (if you say "set kitchen light to 50%" you will receive a 128 here).
-      // Just remember not to delay too much here, this is a callback, exit as soon as possible.
-      // If you have to do something more involved here set a flag and process it in your main loop.
-      #ifdef DEBUG
-        Serial.printf("[MAIN] Device #%d (%s) state: %s value: %d\n", device_id, device_name, state ? "ON" : "OFF", value);
-      #endif
-      if (strcmp(device_name, DIGITS_NAME)==0) {
-        power = state;
-        brightness = value;
-        alexa_update = true;
-      }
-  });
+  espalexa.addDevice("Subscription Counter", subscriptionCounterChanged);
+  espalexa.begin();
   
   IPAddress ip = WiFi.localIP();
 
@@ -162,7 +133,7 @@ void setup() {
 }
 
 void loop() {
-  fauxmo.handle();
+  espalexa.loop();
   #ifdef CLOCK_MODE
     if(power){
       updateTime();
@@ -208,6 +179,16 @@ void loop() {
       turnOffDigits();
     }
   #endif
+}
+
+void subscriptionCounterChanged(uint8_t brightness) { 
+    if(brightness == 0){
+      power = false;
+    }else{
+      power = true;
+    }
+    brightness = brightness;
+    alexa_update = true;
 }
 
 #ifdef CLOCK_MODE
