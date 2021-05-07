@@ -25,8 +25,12 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Client.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
 
-#define YTAPI_HOST "www.googleapis.com"
+
+
+#define YTAPI_HOST "https://www.googleapis.com/"
 #define YTAPI_SSL_PORT 443
 #define YTAPI_TIMEOUT 1500
 
@@ -42,17 +46,20 @@ struct channelStatistics{
 class YoutubeApi
 {
   public:
-    YoutubeApi (String apiKey, Client &client);
+    YoutubeApi (String channelId, String apiKey, Client &client);
     String sendGetToYoutube(String command);
-    bool getChannelStatistics(String channelId);
+    String sendGetToYoutubeOld(String command);
+    bool getChannelStatistics();
     channelStatistics channelStats;
     bool _debug = false;
 
   private:
     String _apiKey;
+    String _channelId;
     Client *client;
     const int maxMessageLength = 1000;
     bool checkForOkResponse(String response);
+    void parseResponse(String httpsResponse);
     void closeClient();
 };
 

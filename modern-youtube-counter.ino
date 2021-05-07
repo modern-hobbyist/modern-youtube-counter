@@ -12,7 +12,6 @@
 #include <WiFiClientSecure.h>
 #include <FastLED.h>
 #include <NTPClient.h>
-#include <WiFiUdp.h>
 #include <Espalexa.h>
 #include "credentials.h"
 #include <ArduinoJson.h> // This Sketch doesn't technically need this, but the library does so it must be installed.
@@ -34,7 +33,7 @@ NTPClient timeClient(ntpUDP);
 Espalexa espalexa;
 
 WiFiClientSecure client;
-YoutubeApi api(API_KEY, client);
+YoutubeApi api(CHANNEL_ID, API_KEY, client);
 
 // Define the array of leds
 CRGB leds[NUM_DIGITS * LEDS_PER_DIGIT];
@@ -121,10 +120,10 @@ void setup() {
   #endif
 
   #ifdef SUBSCRIPTION_MODE
-    api.getChannelStatistics(CHANNEL_ID);
+    api.getChannelStatistics();
     updateDigits(api.channelStats.subscriberCount);
-                Serial.print("Subscriber Count: ");
-            Serial.println(api.channelStats.subscriberCount);
+    Serial.print("Subscriber Count: ");
+    Serial.println(api.channelStats.subscriberCount);
   #endif
 
   #ifdef CLOCK_MODE
@@ -149,7 +148,7 @@ void loop() {
         #ifdef DEBUG
           Serial.println("Checking...");
         #endif
-        if(api.getChannelStatistics(CHANNEL_ID))
+        if(api.getChannelStatistics())
         {
           #ifdef DEBUG
             Serial.println("---------Stats---------");

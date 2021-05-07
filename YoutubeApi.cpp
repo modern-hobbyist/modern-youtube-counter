@@ -22,115 +22,71 @@
 
 #include "YoutubeApi.h"
 
-YoutubeApi::YoutubeApi(String apiKey, Client &client)	{
+YoutubeApi::YoutubeApi(String channelId, String apiKey, Client &client)	{
 	_apiKey = apiKey;
+  _channelId = channelId;
 	this->client = &client;
 }
 
-String YoutubeApi::sendGetToYoutube(String command) {
-	String headers="";
-	String body="";
-	bool finishedHeaders = false;
-	bool currentLineIsBlank = true;
-	unsigned long now;
-	bool avail;
-	// Connect with youtube api over ssl
-	if (client->connect(YTAPI_HOST, YTAPI_SSL_PORT)) {
-		if(_debug) { Serial.println(".... connected to server"); }
-		String a="";
-		char c;
-		int ch_count=0;
-		client->println("GET " + command + "&key=" + _apiKey + " HTTP/1.1");
-		client->print("HOST: ");
-		client->println(YTAPI_HOST);
-		client->println();
-		now=millis();
-		avail=false;
-		while (millis() - now < YTAPI_TIMEOUT) {
-			while (client->available()) {
-
-				// Allow body to be parsed before finishing
-				avail = finishedHeaders;
-				char c = client->read();
-//				Serial.write(c);
-
-				if(!finishedHeaders){
-					if (currentLineIsBlank && c == '\n') {
-						finishedHeaders = true;
-					}
-					else{
-						headers = headers + c;
-
-					}
-				} else {
-					if (ch_count < maxMessageLength)  {
-						body=body+c;
-						ch_count++;
-					}
-				}
-
-				if (c == '\n') {
-					currentLineIsBlank = true;
-				}else if (c != '\r') {
-					currentLineIsBlank = false;
-				}
-			}
-			if (avail) {
-				if(_debug) {
-					Serial.println("Body:");
-					Serial.println(body);
-					Serial.println("END");
-				}
-				break;
-			}
-		}
-	}
-	closeClient();
-  body.remove(0, body.indexOf('{'));
-	return body;
+void YoutubeApi::parseResponse(String httpsResponse){
+  StaticJsonDocument<2048> doc;
+  DeserializationError error = deserializeJson(doc, httpsResponse);
+  
+  // Test if parsing succeeds.
+  if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.f_str());
+    return;
+  }
+  String count = doc["items"][0]["statistics"]["subscriberCount"];
+  channelStats.viewCount = doc["items"][0]["statistics"]["viewCount"];
+  channelStats.subscriberCount = doc["items"][0]["statistics"]["subscriberCount"];
+  channelStats.commentCount = doc["items"][0]["statistics"]["commentCount"];
+  channelStats.hiddenSubscriberCount = doc["items"][0]["statistics"]["hiddenSubscriberCount"];
+  channelStats.videoCount = doc["items"][0]["statistics"]["videoCount"];
 }
 
-bool YoutubeApi::getChannelStatistics(String channelId){
-  String command="/youtube/v3/channels?part=statistics&id="+channelId; //If you can't find it(for example if you have a custom url) look here: https://www.youtube.com/account_advanced
-  const size_t capacity = 10000;
-  DynamicJsonDocument doc(capacity);
+bool YoutubeApi::getChannelStatistics(){
+  String command="/youtube/v3/channels?part=statistics&id="+_channelId+"&key="+_apiKey; //If you can't find it(for example if you have a custom url) look here: https://www.youtube.com/account_advanced
+  WiFiClientSecure *client = new WiFiClientSecure;
+  if(client) {
+//    client -> setCACert(rootCACertificate);
+    client->setInsecure();
 
-  Serial.println("response: ");
-	
-	if(_debug) { Serial.println(F("Closing client")); }
-	
-	String response = sendGetToYoutube(command);       //recieve reply from youtube
+    {
+      // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is 
+      HTTPClient https;
+  
+      Serial.print("[HTTPS] begin...\n");
+      if (https.begin(*client, YTAPI_HOST + command)) {  // HTTPS
+        Serial.print("[HTTPS] GET...\n");
+        
+        int httpCode = https.GET();
+  
+        // httpCode will be negative on error
+        if (httpCode > 0) {
+          // HTTP header has been send and Server response header has been handled
+          Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+          // file found at server
+          if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_FOUND) {
+            parseResponse(https.getString());
+          }
+        } else {
+          Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
+        }
+  
+        https.end();
+      } else {
+        Serial.printf("[HTTPS] Unable to connect\n");
+      }
 
-//  Serial.print("response size: ");
-  Serial.println(response);
-//  Serial.print("capacity: ");
-//  Serial.println(capacity);
- 
-  DeserializationError error = deserializeJson(doc, response);
-  if (error) {
-    Serial.println(response);
-    Serial.print(F("deserializeJson() failed: "));
-    Serial.println(error.c_str());
-    return false;
+      // End extra scoping block
+    }
+  
+    delete client;
+  } else {
+    Serial.println("Unable to create client");
   }
-
-  JsonObject root = doc.as<JsonObject>();
-	if (root.containsKey("items")) {
-		long subscriberCount = root["items"][0]["statistics"]["subscriberCount"];
-		long viewCount = root["items"][0]["statistics"]["viewCount"];
-		long commentCount = root["items"][0]["statistics"]["commentCount"];
-		long hiddenSubscriberCount = root["items"][0]["statistics"]["hiddenSubscriberCount"];
-		long videoCount = root["items"][0]["statistics"]["videoCount"];
-
-		channelStats.viewCount = viewCount;
-		channelStats.subscriberCount = subscriberCount;
-		channelStats.commentCount = commentCount;
-		channelStats.hiddenSubscriberCount = hiddenSubscriberCount;
-		channelStats.videoCount = videoCount;
-
-		return true;
-	}
-	return false;
 }
 
 void YoutubeApi::closeClient() {
